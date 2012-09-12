@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head>
+<link rel="stylesheet" href="{{ STATIC_URL }}otherapp/css/bar.css">
+<style type="text/css">
+body { font-family: verdana,arial ; }
+</style>
+</head>
+<body>
+<h1>Hello</h1>
+{% load compress %}
+{% compress js %}
+<script src="{{ STATIC_URL }}otherapp/js/bar.js"></script>
+{% endcompress %}
+</body>
+</html>
