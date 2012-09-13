@@ -114,7 +114,7 @@ def find_package_data(where='.', package='',
 
 setup(
     name='django-jingo-offline-compressor',
-    version='0.0.1',
+    version='0.0.2',
     author='Peter Bengtsson',
     author_email='mail@peterbe.com',
     packages=find_packages(),
