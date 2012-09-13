@@ -1,1 +1,2 @@
-__import__('pkg_resources').declare_namespace(__name__)
+# following PEP 386
+__version__ = "0.0.4"

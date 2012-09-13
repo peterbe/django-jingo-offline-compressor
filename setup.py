@@ -114,11 +114,12 @@ def find_package_data(where='.', package='',
 
 setup(
     name='django-jingo-offline-compressor',
-    version='0.0.3',
+    version=find_version('jingo_offline_compressor', '__init__.py'),
     author='Peter Bengtsson',
     author_email='mail@peterbe.com',
     packages=find_packages(),
     package_data=find_package_data(),
+    include_package_data=True,
     namespace_packages=['jingo_offline_compressor'],
     scripts=[],
     url='http://github.com/peterbe/django-jingo-offline-compressor/',
