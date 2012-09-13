@@ -1,19 +1,10 @@
-<!doctype html>
-<html>
-<head>
-{% compress css %}
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}myapp/css/foo.css">
-<link rel="stylesheet" type="text/less" href="{{ STATIC_URL }}myapp/css/fool.less">
-<style type="text/css">
-body { font-family: verdana,arial ; }
-</style>
-{% endcompress %}
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block body %}
 <h1>Hello</h1>
 <h2>Input: {{ somefunction('output') }}</h2>
 {% compress js %}
 <script src="{{ static('myapp/js/foo.js') }}"></script>
 {% endcompress %}
-</body>
-</html>
+
+{% endblock %}

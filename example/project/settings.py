@@ -135,6 +135,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'compressor',
     'jingo',
+    'project.base',
     'project.myapp',
     'project.otherapp',
     'jingo_offline_compressor',

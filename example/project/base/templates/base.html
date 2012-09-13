@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head>
+{% compress css %}
+<link href="{{ static('myapp/css/fool.less') }}" type="text/less" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="{{ static('myapp/css/foo.css') }}">
+<style type="text/css">
+body { font-family: verdana,arial ; }
+</style>
+{% endcompress %}
+</head>
+<body>
+{% block body %}
+{% endblock %}
+</body>
+</html>
