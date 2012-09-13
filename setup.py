@@ -1,28 +1,24 @@
-
-#!/usr/bin/env python
 import os
-
-from distutils.util import convert_path
+import re
+import sys
+import codecs
 from fnmatch import fnmatchcase
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from distribute_setup import use_setuptools
-    use_setuptools()
-    from setuptools import setup, find_packages
-
-try:
-    license = open('LICENSE').read()
-except:
-    license = None
+from distutils.util import convert_path
+from setuptools import setup, find_packages
 
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+def read(*parts):
+    return codecs.open(os.path.join(os.path.dirname(__file__), *parts)).read()
 
 
-def desc():
-    return read('README.md')
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
 
 # Provided as an attribute, so you can append to these instead
 # of replicating them:
@@ -47,7 +43,7 @@ def find_package_data(where='.', package='',
 
     The dictionary looks like::
 
-    {'package': [files]}
+        {'package': [files]}
 
     Where ``files`` is a list of all the files in that package that
     don't match anything in ``exclude``.
@@ -110,23 +106,30 @@ def find_package_data(where='.', package='',
                 out.setdefault(package, []).append(prefix + name)
     return out
 
-
-
 setup(
-    name='django-jingo-offline-compressor',
-    version=find_version('jingo_offline_compressor', '__init__.py'),
+    name="django-jingo-offline-compressor",
+    version=find_version("jingo_offline_compressor", "__init__.py"),
+    url='http://github.com/peterbe/django-jingo-offline-compressor/',
+    license='MIT',
+    description="Using jingo and django_compressor but miss offline compression?",
+    long_description=read('README.md'),
     author='Peter Bengtsson',
     author_email='mail@peterbe.com',
     packages=find_packages(),
     package_data=find_package_data(),
-    include_package_data=True,
-    namespace_packages=['jingo_offline_compressor'],
-    scripts=[],
-    url='http://github.com/peterbe/django-jingo-offline-compressor/',
-    license=license,
-    description='Using jingo and django_compressor but miss offline compression?',
-    long_description=read('README.md'),
-    requires=[],
-    install_requires=[],
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Framework :: Django',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.5',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Internet :: WWW/HTTP',
+    ],
     zip_safe=False,
+    install_requires=[
+    ],
 )
