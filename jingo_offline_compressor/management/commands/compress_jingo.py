@@ -16,6 +16,7 @@ from django.core.management.base import NoArgsCommand, CommandError
 from django.template.defaulttags import IfNode
 
 
+import jingo
 from jingo import Template, env
 from django.template.context import Context
 
@@ -35,79 +36,78 @@ except ImportError:
 from compressor.cache import get_offline_hexdigest, write_offline_manifest
 from compressor.conf import settings
 from compressor.exceptions import OfflineGenerationError
-from compressor.templatetags.compress import CompressorNode
 
 
-def patched_render(self, context):
-    # 'Fake' _render method that just returns the context instead of
-    # rendering. It also checks whether the first node is an extend node or
-    # not, to be able to handle complex inheritance chain.
-    self._render_firstnode = MethodType(patched_render_firstnode, self)
-    self._render_firstnode(context)
-
-    # Cleanup, uninstall our _render monkeypatch now that it has been called
-    self._render = self._old_render
-    return context
-
-
-def patched_render_firstnode(self, context):
-    # If this template has a ExtendsNode, we want to find out what
-    # should be put in render_context to make the {% block ... %}
-    # tags work.
-    #
-    # We can't fully render the base template(s) (we don't have the
-    # full context vars - only what's necessary to render the compress
-    # nodes!), therefore we hack the ExtendsNode we found, patching
-    # its get_parent method so that rendering the ExtendsNode only
-    # gives us the blocks content without doing any actual rendering.
-    extra_context = {}
-    try:
-        firstnode = self.nodelist[0]
-    except IndexError:
-        firstnode = None
-    if isinstance(firstnode, ExtendsNode):
-        firstnode._log = self._log
-        firstnode._log_verbosity = self._log_verbosity
-        firstnode._old_get_parent = firstnode.get_parent
-        firstnode.get_parent = MethodType(patched_get_parent, firstnode)
-        try:
-            extra_context = firstnode.render(context)
-            context.render_context = extra_context.render_context
-            # We aren't rendering {% block %} tags, but we want
-            # {{ block.super }} inside {% compress %} inside {% block %}s to
-            # work. Therefore, we need to pop() the last block context for
-            # each block name, to emulate what would have been done if the
-            # {% block %} had been fully rendered.
-            for blockname in firstnode.blocks.keys():
-                context.render_context[BLOCK_CONTEXT_KEY].pop(blockname)
-        except (IOError, TemplateSyntaxError, TemplateDoesNotExist):
-            # That first node we are trying to render might cause more errors
-            # that we didn't catch when simply creating a Template instance
-            # above, so we need to catch that (and ignore it, just like above)
-            # as well.
-            if self._log_verbosity > 0:
-                self._log.write("Caught error when rendering extend node from "
-                                "template %s\n" % getattr(self, 'name', self))
-            return None
-        finally:
-            # Cleanup, uninstall our get_parent monkeypatch now that it has
-            # been called
-            firstnode.get_parent = firstnode._old_get_parent
-    return extra_context
-
-
-def patched_get_parent(self, context):
-    # Patch template returned by extendsnode's get_parent to make sure their
-    # _render method is just returning the context instead of actually
-    # rendering stuff.
-    # In addition, this follows the inheritance chain by looking if the first
-    # node of the template is an extend node itself.
-    compiled_template = self._old_get_parent(context)
-    compiled_template._log = self._log
-    compiled_template._log_verbosity = self._log_verbosity
-    compiled_template._old_render = compiled_template._render
-    compiled_template._render = MethodType(patched_render, compiled_template)
-    return compiled_template
+##def patched_render(self, context):
+##    # 'Fake' _render method that just returns the context instead of
+##    # rendering. It also checks whether the first node is an extend node or
+##    # not, to be able to handle complex inheritance chain.
+##    self._render_firstnode = MethodType(patched_render_firstnode, self)
+##    self._render_firstnode(context)
+##
+##    # Cleanup, uninstall our _render monkeypatch now that it has been called
+##    self._render = self._old_render
+##    return context
+##
+##
+##def patched_render_firstnode(self, context):
+##    # If this template has a ExtendsNode, we want to find out what
+##    # should be put in render_context to make the {% block ... %}
+##    # tags work.
+##    #
+##    # We can't fully render the base template(s) (we don't have the
+##    # full context vars - only what's necessary to render the compress
+##    # nodes!), therefore we hack the ExtendsNode we found, patching
+##    # its get_parent method so that rendering the ExtendsNode only
+##    # gives us the blocks content without doing any actual rendering.
+##    extra_context = {}
+##    try:
+##        firstnode = self.nodelist[0]
+##    except IndexError:
+##        firstnode = None
+##    if isinstance(firstnode, ExtendsNode):
+##        firstnode._log = self._log
+##        firstnode._log_verbosity = self._log_verbosity
+##        firstnode._old_get_parent = firstnode.get_parent
+##        firstnode.get_parent = MethodType(patched_get_parent, firstnode)
+##        try:
+##            extra_context = firstnode.render(context)
+##            context.render_context = extra_context.render_context
+##            # We aren't rendering {% block %} tags, but we want
+##            # {{ block.super }} inside {% compress %} inside {% block %}s to
+##            # work. Therefore, we need to pop() the last block context for
+##            # each block name, to emulate what would have been done if the
+##            # {% block %} had been fully rendered.
+##            for blockname in firstnode.blocks.keys():
+##                context.render_context[BLOCK_CONTEXT_KEY].pop(blockname)
+##        except (IOError, TemplateSyntaxError, TemplateDoesNotExist):
+##            # That first node we are trying to render might cause more errors
+##            # that we didn't catch when simply creating a Template instance
+##            # above, so we need to catch that (and ignore it, just like above)
+##            # as well.
+##            if self._log_verbosity > 0:
+##                self._log.write("Caught error when rendering extend node from "
+##                                "template %s\n" % getattr(self, 'name', self))
+##            return None
+##        finally:
+##            # Cleanup, uninstall our get_parent monkeypatch now that it has
+##            # been called
+##            firstnode.get_parent = firstnode._old_get_parent
+##    return extra_context
+##
+##
+##def patched_get_parent(self, context):
+##    # Patch template returned by extendsnode's get_parent to make sure their
+##    # _render method is just returning the context instead of actually
+##    # rendering stuff.
+##    # In addition, this follows the inheritance chain by looking if the first
+##    # node of the template is an extend node itself.
+##    compiled_template = self._old_get_parent(context)
+##    compiled_template._log = self._log
+##    compiled_template._log_verbosity = self._log_verbosity
+##    compiled_template._old_render = compiled_template._render
+##    compiled_template._render = MethodType(patched_render, compiled_template)
+##    return compiled_template
 
 
 class Command(NoArgsCommand):
@@ -183,8 +183,7 @@ class Command(NoArgsCommand):
             raise OfflineGenerationError("No template loaders defined. You "
                                          "must set TEMPLATE_LOADERS in your "
                                          "settings.")
-        #from coffin.common import env
-        from jingo import env
+        #from jingo import env
 
         paths = set()
         for loader in self.get_loaders():
@@ -275,11 +274,22 @@ class Command(NoArgsCommand):
             for node in nodes:
                 context.push()
                 compiled_node = env.compile(jinja2.nodes.Template(node.body))
-                key = get_offline_hexdigest(Template.from_code(env, compiled_node, {}).render(context))
+                context.update(jingo.register.env.globals)
+                context.update(jingo.register.env.filters)
+
+                key = get_offline_hexdigest(
+                    Template.from_code(
+                        jingo.register.env,
+                        compiled_node,
+                        {}
+                    ).render(context))
                 try:
                     context['compress_forced'] = True
                     compiled_node = env.compile(jinja2.nodes.Template([node]))
-                    result = Template.from_code(env, compiled_node, {}).render(context)
+                    result = Template.from_code(
+                        env,
+                        compiled_node,
+                        {}).render(context)
                 except Exception, e:
                     raise CommandError("An error occured during rendering %s: "
                                        "%s" % (template.template_name, e))
@@ -303,8 +313,10 @@ class Command(NoArgsCommand):
 
     def walk_nodes(self, node, block_name=None):
         for node in self.get_nodelist(node):
-            if isinstance(node, CallBlock) and isinstance(node.call, Call) and isinstance(node.call.node, ExtensionAttribute)\
-            and node.call.node.identifier == 'jingo_offline_compressor.jinja2ext.CompressorExtension':
+            if (isinstance(node, CallBlock) and
+                isinstance(node.call, Call) and
+                isinstance(node.call.node, ExtensionAttribute) and
+                node.call.node.identifier == 'jingo_offline_compressor.jinja2ext.CompressorExtension'):
             #and node.call.node.identifier == 'compressor.contrib.jinja2ext.CompressorExtension':
                 yield node
             else:

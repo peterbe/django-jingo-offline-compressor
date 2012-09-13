@@ -13,7 +13,7 @@ body { font-family: verdana,arial ; }
 <h1>Hello</h1>
 <h2>Input: {{ somefunction('output') }}</h2>
 {% compress js %}
-<script src="{{ STATIC_URL }}myapp/js/foo.js"></script>
+<script src="{{ static('myapp/js/foo.js') }}"></script>
 {% endcompress %}
 </body>
 </html>
